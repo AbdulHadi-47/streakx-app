@@ -28,7 +28,7 @@ export default function SigninPage() {
 
     console.log(data);
     setMessage("Logged In Successfully");
-    redirect("/dashboard");
+    redirect("/onboarding");
   }
 
   return (

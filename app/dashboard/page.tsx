@@ -18,15 +18,18 @@ export default async function DashboardPage() {
     .from("profiles")
     .select("daily_post_goal, daily_reply_goal")
     .eq("user_id", user.id)
-    .single()
+    .maybeSingle()
 
+   if (error) {
+    console.error("Error fetching profile:", error)
+  }
+
+  
   if (!profile) {
     redirect("/onboarding");
   }
 
-  if (error) {
-    console.error("Error fetching profile:", error)
-  }
+ 
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold">Dashboard</h1>

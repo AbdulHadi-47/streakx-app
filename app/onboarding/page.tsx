@@ -1,10 +1,10 @@
 import { saveGoals } from "@/app/actions/goals";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export default async function OnboardingPage() {
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
      const {
       data: { user },

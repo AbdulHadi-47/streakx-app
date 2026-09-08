@@ -4,7 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getDailyProgress } from "@/lib/x/getDailyProgress";
 import { revalidatePath } from "next/cache";
 
-export async function refreshProgress() {
+export type RefreshState = {
+  success: boolean;
+  message: string;
+};
+
+export async function refreshProgress(
+  previousState: RefreshState,
+  formData: FormData
+): Promise<RefreshState> {
+
+  
   const supabase = await createClient();
 
   const {
@@ -31,7 +41,10 @@ export async function refreshProgress() {
   }
 
   if (!profile?.x_username) {
-    throw new Error("X account is not connected");
+  return {
+    success: false,
+    message: "Connect your X account first.",
+    };
   }
 
   const today = new Date().toISOString().split("T")[0];
@@ -51,7 +64,10 @@ export async function refreshProgress() {
   const refreshCount = existingProgress?.refresh_count ?? 0;
 
   if (refreshCount >= 3) {
-    throw new Error("Daily refresh limit reached");
+    return {
+      success: false,
+      message: "You've used all 3 refreshes for today.",
+    };
   }
 
   const progress = await getDailyProgress(profile.x_username);
@@ -78,10 +94,19 @@ export async function refreshProgress() {
       }
     );
 
-  if (upsertError) {
-    console.error(upsertError);
-    throw new Error("Could not save progress");
-  }
+    if (upsertError) {
+      console.error(upsertError);
+
+      return {
+        success: false,
+        message: "Could not save your progress. Try again.",
+      };
+    }
 
   revalidatePath("/dashboard");
+
+  return {
+    success: true,
+    message: "Progress updated successfully",
+  };
 }

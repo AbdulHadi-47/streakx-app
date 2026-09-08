@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
 import { refreshProgress } from "@/app/actions/progress";
 import { calculateStreak } from "@/lib/streak/calculateStreak";
+import RefreshProgressButton from "@/components/RefreshProgressButton";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -92,9 +93,9 @@ export default async function DashboardPage() {
       <p>Current streak: {streak.currentStreak} days</p>
       <p>Longest streak: {streak.longestStreak} days</p>
 
-      <form action={refreshProgress}>
-        <button type="submit">Refresh progress</button>
-      </form>
+      {profile.x_username && (
+        <RefreshProgressButton />
+      )}
 
       <form action={signOut}>
         <button type="submit">Logout</button>

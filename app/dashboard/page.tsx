@@ -2,9 +2,12 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
 import { refreshProgress } from "@/app/actions/progress";
+import { calculateStreak } from "@/lib/streak/calculateStreak";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
+
+  
 
   const {
     data: { user },
@@ -42,6 +45,10 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .eq("date", today)
     .maybeSingle();
+
+
+  
+  const streak = await calculateStreak(user.id);
 
   if (progressError) {
     console.error("Error fetching daily progress:", progressError);
@@ -81,6 +88,9 @@ export default async function DashboardPage() {
           Goal completed: {dailyProgress?.goal_completed ? "Yes" : "No"}
         </p>
       </div>
+
+      <p>Current streak: {streak.currentStreak} days</p>
+      <p>Longest streak: {streak.longestStreak} days</p>
 
       <form action={refreshProgress}>
         <button type="submit">Refresh progress</button>

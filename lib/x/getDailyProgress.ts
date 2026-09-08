@@ -1,3 +1,5 @@
+
+
 type DailyProgress = {
   posts: number;
   replies: number;

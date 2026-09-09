@@ -3,8 +3,12 @@ type DailyProgress = {
   replies: number;
 };
 
+import { normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
+
 export async function getDailyProgress(
-  username: string
+  username: string,
+  timeZone = "UTC",
+  targetDate?: string,
 ): Promise<DailyProgress> {
   const apiKey = process.env.TWITTER_API_IO_KEY;
 
@@ -12,7 +16,8 @@ export async function getDailyProgress(
     throw new Error("Twitter API key is missing");
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const normalizedTimeZone = normalizeTimeZone(timeZone);
+  const today = targetDate ?? zonedDateKey(new Date(), normalizedTimeZone);
 
   let posts = 0;
   let replies = 0;
@@ -36,6 +41,7 @@ export async function getDailyProgress(
         "X-API-Key": apiKey,
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
     });
 
     const result = await response.json();
@@ -54,9 +60,11 @@ export async function getDailyProgress(
     let foundOlderTweet = false;
 
     for (const tweet of tweets) {
-      const tweetDate = new Date(tweet.createdAt)
-        .toISOString()
-        .split("T")[0];
+      const createdAt = new Date(tweet.createdAt);
+      if (Number.isNaN(createdAt.getTime())) continue;
+      const tweetDate = zonedDateKey(createdAt, normalizedTimeZone);
+
+      if (tweetDate > today) continue;
 
       if (tweetDate < today) {
         foundOlderTweet = true;

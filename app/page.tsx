@@ -10,7 +10,7 @@ export const dynamic = "error";
 const faqs = [
   {
     question: "What does the activity heat map show?",
-    answer: "Each square represents a UTC day. Brighter blue means more saved activity, and outlined squares mean both daily goals were completed. Filter by posts or replies, explore up to a year, and select a square for the daily counts. Days without a saved refresh appear as dashed squares.",
+    answer: "Each square represents a day in your time zone. Brighter blue means more saved activity, and outlined squares mean both daily goals were completed. Filter by posts or replies, explore up to a year, and select a square for the daily counts. Days without a saved refresh appear as dashed squares.",
   },
   {
     question: "How does Streak X track my activity?",
@@ -26,7 +26,7 @@ const faqs = [
   },
   {
     question: "When does a new day begin?",
-    answer: "Daily activity and refresh allowances reset at midnight UTC. Both goals need to be completed within the same UTC day. The dashboard labels its times in UTC.",
+    answer: "Daily activity and refresh allowances reset at midnight in your detected time zone. Both goals need to be completed within your local day, and your progress syncs automatically at noon and just before midnight.",
   },
   {
     question: "Do I need to share my X password?",
@@ -133,7 +133,7 @@ export default function Home() {
           <div className="steps-grid">
             <article><span className="step-number">01 /</span><Icon name="target" /><h3>Set your pace</h3><p>Create your account and choose a daily post and reply goal that fits into your life.</p></article>
             <article><span className="step-number">02 /</span><span className="x-symbol">𝕏</span><h3>Make it count</h3><p>Connect your X username. Post, join conversations, and refresh to check your progress.</p></article>
-            <article><span className="step-number">03 /</span><Icon name="flame" /><h3>Keep the streak</h3><p>Hit both goals before midnight UTC. Come back tomorrow and build on what you started.</p></article>
+            <article><span className="step-number">03 /</span><Icon name="flame" /><h3>Keep the streak</h3><p>Hit both goals before midnight in your time zone. Come back tomorrow and build on what you started.</p></article>
           </div>
         </section>
 

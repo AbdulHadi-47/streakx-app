@@ -25,11 +25,32 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
       return query;
     },
   };
+  const getActivity = activity ?? (async () => ({ posts: 3, replies: 10 }));
   const dependencies = {
     "@/lib/supabase/server": { createClient: async () => database },
     "next/navigation": { redirect: (url) => { throw new Error(`REDIRECT:${url}`); } },
     "next/cache": { revalidatePath: (url) => invalidations.push(url) },
-    "@/lib/x/getDailyProgress": { getDailyProgress: activity ?? (async () => ({ posts: 3, replies: 10 })) },
+    "@/lib/x/getDailyProgress": { getDailyProgress: getActivity },
+    "@/lib/timezone": { normalizeTimeZone: (value) => typeof value === "string" && value ? value : "UTC" },
+    "@/lib/progress/sync-progress": {
+      syncProgressForProfile: async (client, profile, options) => {
+        const { data: existing, error } = await client.from("daily_progress").select("refresh_count").eq("user_id", profile.user_id).eq("date", "2026-09-09").maybeSingle();
+        if (error) throw new Error("read failed");
+        const refreshCount = existing?.refresh_count ?? 0;
+        if (options?.incrementManualRefresh && refreshCount >= 3) return { success: false, reason: "limit" };
+        const progress = await getActivity();
+        const write = await client.from("daily_progress").upsert({
+          user_id: profile.user_id,
+          date: "2026-09-09",
+          posts_count: progress.posts,
+          replies_count: progress.replies,
+          goal_completed: progress.posts >= profile.daily_post_goal && progress.replies >= profile.daily_reply_goal,
+          refresh_count: options?.incrementManualRefresh ? refreshCount + 1 : refreshCount,
+        });
+        if (write.error) throw new Error("write failed");
+        return { success: true, progress };
+      },
+    },
   };
   const source = fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -107,7 +128,7 @@ test("invalid handles and X outages produce useful inline errors", async () => {
   assert.equal(writes.length, 0);
 });
 
-const profile = { data: { x_username: "creator", daily_post_goal: 3, daily_reply_goal: 10 } };
+const profile = { data: { x_username: "creator", daily_post_goal: 3, daily_reply_goal: 10, time_zone: "Asia/Karachi" } };
 
 test("the daily refresh limit prevents another X request", async () => {
   let requests = 0;

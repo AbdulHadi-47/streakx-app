@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
 
 type ProgressRow = {
   date: string;
@@ -11,7 +12,8 @@ type StreakResult = {
 };
 
 export async function calculateStreak(
-  userId: string
+  userId: string,
+  timeZone = "UTC",
 ): Promise<StreakResult> {
   const supabase = await createClient();
 
@@ -28,11 +30,11 @@ export async function calculateStreak(
 
   const progressRows: ProgressRow[] = rows ?? [];
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = zonedDateKey(new Date(), normalizeTimeZone(timeZone));
 
   let currentStreak = 0;
 
-  const expectedDate = new Date();
+  const expectedDate = new Date(`${today}T00:00:00Z`);
 
   const todayRow = progressRows.find((row) => row.date === today);
 

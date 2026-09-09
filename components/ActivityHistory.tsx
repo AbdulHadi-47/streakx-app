@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { shiftDate } from "@/lib/activity/heatmap";
 import ActivityHeatmap from "@/components/ActivityHeatmap";
 
-export default async function ActivityHistory({ userId, today }: { userId: string; today: string }) {
+export default async function ActivityHistory({ userId, today, timeZone = "UTC" }: { userId: string; today: string; timeZone?: string }) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("daily_progress")
@@ -16,7 +16,7 @@ export default async function ActivityHistory({ userId, today }: { userId: strin
   if (error) {
     return <section className="activity-heatmap heatmap-error" role="status"><h2>Activity overview</h2><p>Your activity history couldn’t be loaded. Reload the page to try again.</p></section>;
   }
-  return <ActivityHeatmap rows={data ?? []} today={today} />;
+  return <ActivityHeatmap rows={data ?? []} today={today} timeZone={timeZone} />;
 }
 
 export function ActivityHistoryLoading() {

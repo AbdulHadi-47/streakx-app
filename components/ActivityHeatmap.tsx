@@ -16,8 +16,8 @@ const levels = ["0", "1–4", "5–9", "10–19", "20+"];
 const formatNumber = (value: number) => value.toLocaleString("en");
 
 export default function ActivityHeatmap({
-  rows, today, demo = false,
-}: { rows: ActivityRow[]; today: string; demo?: boolean }) {
+  rows, today, demo = false, timeZone = "UTC",
+}: { rows: ActivityRow[]; today: string; demo?: boolean; timeZone?: string }) {
   const id = useId();
   const [range, setRange] = useState<ActivityRange>(365);
   const [metric, setMetric] = useState<ActivityMetric>("all");
@@ -89,7 +89,7 @@ export default function ActivityHeatmap({
               onClick={() => setMetric(value)}>{label}</button>
           ))}
         </div>
-        <span className="heatmap-range-label">{calendar.start} — {today} <span>UTC</span></span>
+        <span className="heatmap-range-label">{calendar.start} — {today} <span>{demo ? "YOUR LOCAL TIME" : timeZone.replaceAll("_", " ")}</span></span>
       </div>
 
       <p className="sr-only" id={`${id}-instructions`}>Select a day for details. Use up and down arrows for adjacent days, left and right arrows for adjacent weeks, and Home or End for the first or last day.</p>

@@ -1,47 +1,14 @@
-import { saveGoals } from "@/app/actions/goals";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { AuthShell, Icon } from "@/components/ui";
+import { GoalsForm } from "@/components/SetupForm";
 
 export default async function OnboardingPage() {
-
-    const supabase = await createClient();
-
-     const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/login");
-    }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (profile) {
-      redirect("/dashboard");
-    }
-
-    return (
-      <form action={saveGoals}>
-        <input
-          type="number"
-          name="daily_post_goal"
-          min="1"
-          defaultValue="3"
-        />
-
-        <input
-          type="number"
-          name="daily_reply_goal"
-          min="1"
-          defaultValue="10"
-        />
-
-        <button type="submit">Save goals</button>
-      </form>
-    )
-
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile, error } = await supabase.from("profiles").select("id, x_username").eq("user_id", user.id).maybeSingle();
+  if (error) throw new Error("Could not load your profile");
+  if (profile) redirect(profile.x_username ? "/dashboard" : "/connect-x");
+  return <AuthShell step={1}><div className="form-icon"><Icon name="target" /></div><h2>Find your daily rhythm.</h2><p className="form-description">A few posts. A few conversations. Set a daily goal that works for you.</p><GoalsForm /></AuthShell>;
 }

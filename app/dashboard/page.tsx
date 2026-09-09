@@ -1,105 +1,31 @@
+import Link from "next/link";
+import { Suspense } from "react";
+import ActivityHistory, { ActivityHistoryLoading } from "@/components/ActivityHistory";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/app/actions/auth";
-import { refreshProgress } from "@/app/actions/progress";
 import { calculateStreak } from "@/lib/streak/calculateStreak";
 import RefreshProgressButton from "@/components/RefreshProgressButton";
+import { Brand, Icon } from "@/components/ui";
+import { GoalProgress, StreakCard } from "@/components/ProgressCards";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-
-  
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect("/login");
-  }
-
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("daily_post_goal, daily_reply_goal, x_user_id, x_username")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error) {
-    console.error("Error fetching profile:", error);
-  }
-
-  if (!profile) {
-    redirect("/onboarding");
-  }
-
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data: profile, error } = await supabase.from("profiles").select("daily_post_goal, daily_reply_goal, x_user_id, x_username").eq("user_id", user.id).maybeSingle();
+  if (error) throw new Error("Could not load your profile");
+  if (!profile) redirect("/onboarding");
   const today = new Date().toISOString().split("T")[0];
+  const [{ data: dailyProgress, error: progressError }, streak] = await Promise.all([
+    supabase.from("daily_progress").select("posts_count, replies_count, goal_completed, refresh_count, last_refreshed_at").eq("user_id", user.id).eq("date", today).maybeSingle(),
+    calculateStreak(user.id),
+  ]);
+  if (progressError) throw new Error("Could not load your daily progress");
+  const completed = Boolean(dailyProgress?.goal_completed);
+  const connected = Boolean(profile.x_username);
+  const dateLabel = new Intl.DateTimeFormat("en", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${today}T00:00:00Z`));
+  const lastUpdated = dailyProgress?.last_refreshed_at ? new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(new Date(dailyProgress.last_refreshed_at)) + " UTC" : null;
 
-  const { data: dailyProgress, error: progressError } = await supabase
-    .from("daily_progress")
-    .select(`
-      posts_count,
-      replies_count,
-      goal_completed,
-      refresh_count,
-      last_refreshed_at
-    `)
-    .eq("user_id", user.id)
-    .eq("date", today)
-    .maybeSingle();
-
-
-  
-  const streak = await calculateStreak(user.id);
-
-  if (progressError) {
-    console.error("Error fetching daily progress:", progressError);
-  }
-
-  return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
-
-      <p>Logged in as: {user.email}</p>
-
-      <div className="mt-4">
-        <p>Daily Post Goal: {profile.daily_post_goal}</p>
-        <p>Daily Reply Goal: {profile.daily_reply_goal}</p>
-      </div>
-
-      {profile.x_username ? (
-        <p>Connected X: @{profile.x_username}</p>
-      ) : (
-        <a href="/connect-x">Connect X account</a>
-      )}
-
-      <div className="mt-4">
-        <p>
-          Posts: {dailyProgress?.posts_count ?? 0} / {profile.daily_post_goal}
-        </p>
-
-        <p>
-          Replies: {dailyProgress?.replies_count ?? 0} / {profile.daily_reply_goal}
-        </p>
-
-        <p>
-          Refreshes: {dailyProgress?.refresh_count ?? 0} / 3
-        </p>
-
-        <p>
-          Goal completed: {dailyProgress?.goal_completed ? "Yes" : "No"}
-        </p>
-      </div>
-
-      <p>Current streak: {streak.currentStreak} days</p>
-      <p>Longest streak: {streak.longestStreak} days</p>
-
-      {profile.x_username && (
-        <RefreshProgressButton />
-      )}
-
-      <form action={signOut}>
-        <button type="submit">Logout</button>
-      </form>
-    </main>
-  );
+  return <><header className="site-header"><div className="header-inner"><div className="header-left"><Brand /><span className="header-divider" /><span className="nav-current">Overview</span></div><details className="account-menu"><summary><span className="avatar">{(profile.x_username || user.email || "S").charAt(0).toUpperCase()}</span><span className="account-name">{profile.x_username ? `@${profile.x_username}` : "Your account"}</span><span className="chevron">⌄</span></summary><div className="account-dropdown"><span className="account-email">{user.email}</span><form action={signOut}><button type="submit"><Icon name="logout" /> Log out</button></form></div></details></div></header><main id="main" className="dashboard"><div className="dashboard-heading"><div><span className="eyebrow">YOUR DAILY CHECK-IN</span><h1>A little better, every day<span className="blue-text">.</span></h1><p>Show up. Start conversations. Keep your streak alive.</p></div><span className="date-chip">{dateLabel}<span>UTC</span></span></div>{!connected && <div className="connection-banner"><span className="form-icon x-symbol">𝕏</span><div><strong>Let’s connect your X account.</strong><p>Your goals are set. Connect X to start tracking your progress.</p></div><Link className="button button-small" href="/connect-x">Connect X <Icon name="arrow" /></Link></div>}<div className="dashboard-grid"><StreakCard current={streak.currentStreak} longest={streak.longestStreak} completed={completed} /><section className="today-card"><div className="section-title"><h2>Today’s progress</h2><span className={`status-pill ${completed ? "done" : ""}`}>{completed ? <Icon name="check" /> : <span className="status-dot" />}{completed ? "Goals complete" : connected ? "In progress" : "Not connected"}</span></div><div className="goals-grid"><GoalProgress label="Posts" icon="post" count={dailyProgress?.posts_count ?? 0} goal={profile.daily_post_goal} /><GoalProgress label="Replies" icon="reply" count={dailyProgress?.replies_count ?? 0} goal={profile.daily_reply_goal} /></div><div className={`daily-message ${completed ? "completed-message" : ""}`}><Icon name={completed ? "check" : "target"} /><span>{completed ? "You’re all set for today. That’s consistency." : "Complete both goals to add a day to your streak."}</span></div><div className="progress-footer"><span><span className="muted-label">LAST UPDATED</span>{lastUpdated ?? "Not refreshed yet"}</span>{connected ? <RefreshProgressButton refreshCount={dailyProgress?.refresh_count ?? 0} /> : <Link className="button button-secondary" href="/connect-x">Connect to track <Icon name="arrow" /></Link>}</div></section></div><Suspense fallback={<ActivityHistoryLoading />}><ActivityHistory userId={user.id} today={today} /></Suspense><div className="dashboard-bottom"><section className="account-card"><span className="small-icon x-symbol">𝕏</span><div><h2>Your X account</h2><p>{connected ? `@${profile.x_username}` : "No account connected"}</p></div>{connected ? <a className="text-link" href={`https://x.com/${encodeURIComponent(profile.x_username)}`} target="_blank" rel="noreferrer">View profile <Icon name="external" /></a> : <Link className="text-link" href="/connect-x">Connect <Icon name="arrow" /></Link>}</section><section className="rhythm-note"><Icon name="flame" /><div><h2>Consistency beats intensity.</h2><p>A few meaningful posts and replies. Every single day.</p></div></section></div><footer className="dashboard-footer"><span><span className="blue-dot" /> One day at a time.</span><span>Daily goals reset at midnight UTC.</span></footer></main></>;
 }

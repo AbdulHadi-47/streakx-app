@@ -9,10 +9,7 @@ export type RefreshState = {
   message: string;
 };
 
-export async function refreshProgress(
-  previousState: RefreshState,
-  formData: FormData
-): Promise<RefreshState> {
+export async function refreshProgress(): Promise<RefreshState> {
 
   
   const supabase = await createClient();
@@ -22,7 +19,7 @@ export async function refreshProgress(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Unauthorized");
+    return { success: false, message: "Your session has expired. Please log in again." };
   }
 
   const { data: profile, error: profileError } = await supabase
@@ -37,7 +34,7 @@ export async function refreshProgress(
 
   if (profileError) {
     console.error(profileError);
-    throw new Error("Could not load profile");
+    return { success: false, message: "Could not load your profile. Please try again." };
   }
 
   if (!profile?.x_username) {
@@ -58,7 +55,7 @@ export async function refreshProgress(
 
   if (progressError) {
     console.error(progressError);
-    throw new Error("Could not load today's progress");
+    return { success: false, message: "Could not load today’s progress. Please try again." };
   }
 
   const refreshCount = existingProgress?.refresh_count ?? 0;
@@ -70,7 +67,12 @@ export async function refreshProgress(
     };
   }
 
-  const progress = await getDailyProgress(profile.x_username);
+  let progress;
+  try {
+    progress = await getDailyProgress(profile.x_username);
+  } catch {
+    return { success: false, message: "Could not refresh your X activity. Try again in a moment." };
+  }
 
   const goalCompleted =
     progress.posts >= profile.daily_post_goal &&

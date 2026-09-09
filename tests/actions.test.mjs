@@ -26,6 +26,7 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
     },
   };
   const getActivity = activity ?? (async () => ({ posts: 3, replies: 10 }));
+  class ProgressSyncError extends Error {}
   const dependencies = {
     "@/lib/supabase/server": { createClient: async () => database },
     "next/navigation": { redirect: (url) => { throw new Error(`REDIRECT:${url}`); } },
@@ -34,6 +35,7 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
     "@/lib/x/getDailyProgress": { getDailyProgress: getActivity },
     "@/lib/timezone": { normalizeTimeZone: (value) => typeof value === "string" && value ? value : "UTC" },
     "@/lib/progress/sync-progress": {
+      ProgressSyncError,
       syncProgressForProfile: async (client, profile, options) => {
         const { data: existing, error } = await client.from("daily_progress").select("refresh_count").eq("user_id", profile.user_id).eq("date", "2026-09-09").maybeSingle();
         if (error) throw new Error("read failed");
@@ -51,6 +53,18 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
         if (write.error) throw new Error("write failed");
         return { success: true, progress };
       },
+    },
+    "@/lib/x/getXAccount": {
+      getXAccount: async (username) => {
+        const response = await (fetchImpl ?? (async () => ({ ok: true, json: async () => ({ data: { id: "x-id", userName: username } }) })))(new URL("https://example.invalid?userName=" + username));
+        if (!response.ok) throw new Error("not found");
+        const result = await response.json();
+        return { id: String(result.data.id), username: result.data.userName };
+      },
+    },
+    "@/lib/x/errors": {
+      xConnectionErrorMessage: () => "We couldn’t reach X. Your account was not changed.",
+      xRefreshErrorMessage: () => "Could not refresh your X activity. No refresh was used.",
     },
   };
   const source = fs.readFileSync(new URL(`../${file}`, import.meta.url), "utf8");

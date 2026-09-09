@@ -4,6 +4,9 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isValidTimeZone, TIME_ZONE_COOKIE } from "@/lib/timezone";
+import { getXAccount } from "@/lib/x/getXAccount";
+import { xConnectionErrorMessage } from "@/lib/x/errors";
+import { getSiteUrl } from "@/lib/site-url";
 
 export type SettingsState = { success: boolean; message: string };
 
@@ -15,24 +18,6 @@ function setTimeZoneCookie(timeZone: string) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
   }));
-}
-
-async function findXAccount(username: string) {
-  const apiKey = process.env.TWITTER_API_IO_KEY;
-  if (!apiKey) throw new Error("X connection is temporarily unavailable.");
-  const url = new URL("https://api.twitterapi.io/twitter/user/info");
-  url.searchParams.set("userName", username);
-  const response = await fetch(url, {
-    headers: { "X-API-Key": apiKey },
-    cache: "no-store",
-    signal: AbortSignal.timeout(12_000),
-  });
-  if (!response.ok) throw new Error("We couldn’t find that X account.");
-  const result = await response.json();
-  const account = result.data ?? result;
-  const id = String(account.id ?? account.userId ?? account.id_str ?? "");
-  if (!id) throw new Error("We couldn’t identify that X account.");
-  return { id, username: String(account.userName ?? account.username ?? username) };
 }
 
 export async function updateSettings(_state: SettingsState, formData: FormData): Promise<SettingsState> {
@@ -73,12 +58,12 @@ export async function updateSettings(_state: SettingsState, formData: FormData):
 
   if (requestedUsername && requestedUsername.toLowerCase() !== currentProfile.x_username?.toLowerCase()) {
     try {
-      const account = await findXAccount(requestedUsername);
+      const account = await getXAccount(requestedUsername);
       updates.x_user_id = account.id;
       updates.x_username = account.username;
       updates.x_connected_at = new Date().toISOString();
     } catch (error) {
-      return { success: false, message: error instanceof Error ? error.message : "Could not connect that X account." };
+      return { success: false, message: xConnectionErrorMessage(error) };
     }
   }
 
@@ -106,6 +91,12 @@ export async function changePassword(_state: SettingsState, formData: FormData):
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Your session expired. Please log in again." };
   const { error } = await supabase.auth.updateUser({ password });
+  if (error?.code === "reauthentication_needed") {
+    return { success: false, message: "For security, log out and use “Forgot password?” to make this change." };
+  }
+  if (error?.code === "weak_password") {
+    return { success: false, message: "That password is too easy to guess. Choose a stronger one." };
+  }
   if (error) return { success: false, message: "Could not update your password. Please try again." };
   return { success: true, message: "Password updated." };
 }
@@ -119,20 +110,26 @@ export async function changeEmail(_state: SettingsState, formData: FormData): Pr
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { success: false, message: "Your session expired. Please log in again." };
   if (user.email?.toLowerCase() === email) return { success: false, message: "That is already your login email." };
-  const { error } = await supabase.auth.updateUser({ email });
-  if (error) return { success: false, message: "Could not update your email. Please try again." };
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${await getSiteUrl()}/auth/callback?next=/settings` },
+  );
+  if (error?.status === 429) return { success: false, message: "Too many email changes. Wait a few minutes and try again." };
+  if (error) return { success: false, message: "Could not update your email. The address may already be in use." };
   return { success: true, message: "Check your inbox to confirm the new email address." };
 }
 
-export async function disconnectX(): Promise<void> {
+export async function disconnectX(): Promise<SettingsState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  await supabase.from("profiles").update({
+  if (!user) return { success: false, message: "Your session expired. Please log in again." };
+  const { data, error } = await supabase.from("profiles").update({
     x_user_id: null,
     x_username: null,
     x_connected_at: null,
-  }).eq("user_id", user.id);
+  }).eq("user_id", user.id).select("user_id").maybeSingle();
+  if (error || !data) return { success: false, message: "We couldn’t disconnect X. Your connection was left unchanged." };
   revalidatePath("/dashboard");
   revalidatePath("/settings");
+  return { success: true, message: "X account disconnected." };
 }

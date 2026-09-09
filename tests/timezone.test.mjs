@@ -53,6 +53,11 @@ test("X activity is counted inside the user's local date boundary", async () => 
     exports: activity,
     require: (name) => {
       if (name === "@/lib/timezone") return timezone;
+      if (name === "@/lib/x/errors") return {
+        XApiError: class XApiError extends Error {},
+        normalizeXApiError: (error) => error,
+        xApiErrorFromStatus: () => new Error("provider error"),
+      };
       throw new Error("Unexpected dependency: " + name);
     },
     process: { env: { TWITTER_API_IO_KEY: "test-only" } },

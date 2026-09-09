@@ -8,7 +8,7 @@ import type { AuthState } from "@/lib/form-state";
 
 const initialState: AuthState = { success: false, message: "", email: "" };
 
-export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export default function AuthForm({ mode, notice = "" }: { mode: "login" | "signup"; notice?: string }) {
   const signup = mode === "signup";
   const [state, action, pending] = useActionState(signup ? signUp : signIn, initialState);
 
@@ -20,6 +20,7 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
         {signup ? "Create your account. Start showing up on X." : "Your goals are waiting. Let’s keep going."}
       </p>
       <form action={action} className="form-stack" aria-busy={pending}>
+        {notice && <p className="form-message success" role="status">{notice}</p>}
         <div className="field">
           <label htmlFor="email">Email address</label>
           <input id="email" name="email" type="email" placeholder="you@example.com"
@@ -30,8 +31,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
           <input id="password" name="password" type="password"
             placeholder={signup ? "Create a password" : "Enter your password"}
             autoComplete={signup ? "new-password" : "current-password"}
-            minLength={signup ? 6 : undefined} required readOnly={pending} />
-          {signup && <span className="field-hint">At least 6 characters.</span>}
+            minLength={signup ? 8 : undefined} required readOnly={pending} />
+          {signup && <span className="field-hint">At least 8 characters.</span>}
+          {!signup && <Link className="field-action" href="/forgot-password">Forgot password?</Link>}
         </div>
         <button className="button button-full" disabled={pending || state.success} type="submit">
           {pending ? (signup ? "Creating account…" : "Logging in…") : (signup ? "Create account" : "Log in")}
@@ -42,6 +44,9 @@ export default function AuthForm({ mode }: { mode: "login" | "signup" }) {
             className={`form-message ${state.success ? "success" : "error"}`}>
             {state.message}
           </p>
+        )}
+        {!signup && state.message.includes("confirm your email") && (
+          <Link className="field-action" href="/auth-link-error?type=signup">Send a new confirmation email</Link>
         )}
       </form>
       <p className="form-switch">

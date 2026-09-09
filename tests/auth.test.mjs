@@ -31,9 +31,11 @@ function authActions(auth) {
         return { auth };
       },
     },
+    "@/lib/site-url": { getSiteUrl: async () => "http://localhost:3000" },
     "next/cache": { revalidatePath: () => events.push("invalidate") },
+    "next/headers": { headers: async () => ({ get: () => "http://localhost:3000" }) },
     "next/navigation": { redirect: (url) => { events.push(url); throw new Error(`REDIRECT:${url}`); } },
-  });
+  }, { process: { env: {} } });
   return { ...actions, events };
 }
 
@@ -86,6 +88,50 @@ test("signup requiring email confirmation stays on the form with instructions", 
   assert.equal(state.success, true);
   assert.match(state.message, /confirm your email/);
   assert.equal(actions.events.length, 0);
+});
+
+test("password recovery uses the app callback and avoids account enumeration", async () => {
+  let request;
+  const actions = authActions({
+    resetPasswordForEmail: async (email, options) => {
+      request = { email, options };
+      return { error: null };
+    },
+  });
+  const data = new FormData();
+  data.set("email", " Creator@Example.invalid ");
+  const state = await actions.requestPasswordReset({}, data);
+  assert.equal(state.success, true);
+  assert.equal(request.email, "creator@example.invalid");
+  assert.equal(request.options.redirectTo, "http://localhost:3000/auth/callback?next=/reset-password");
+  assert.match(state.message, /If an account exists/);
+});
+
+test("expired-link replacement sends a fresh signup confirmation", async () => {
+  let request;
+  const actions = authActions({
+    resend: async (payload) => {
+      request = payload;
+      return { error: null };
+    },
+  });
+  const data = new FormData();
+  data.set("email", "creator@example.invalid");
+  assert.equal((await actions.resendConfirmation({}, data)).success, true);
+  assert.equal(request.type, "signup");
+  assert.match(request.options.emailRedirectTo, /\/auth\/callback/);
+});
+
+test("recovered passwords require a live recovery session", async () => {
+  const data = new FormData();
+  data.set("password", "new-password");
+  data.set("password_confirmation", "new-password");
+  const actions = authActions({
+    getUser: async () => ({ data: { user: null } }),
+  });
+  const state = await actions.updateRecoveredPassword({}, data);
+  assert.equal(state.success, false);
+  assert.match(state.message, /expired/);
 });
 
 test("real Supabase SSR cookies survive a new server request", async () => {

@@ -52,3 +52,12 @@ Vercel can supply the authorization header automatically when the environment
 variable is named `CRON_SECRET`. Its Hobby plan only supports daily cron
 jobs, so the 15-minute schedule requires a plan or scheduler that supports that
 frequency.
+
+## Authentication links
+
+Set `NEXT_PUBLIC_SITE_URL` to the deployed app origin. In Supabase Auth URL
+Configuration, allow `http://localhost:3000/auth/callback` for development
+and `https://your-domain.com/auth/callback` for production. Password recovery,
+signup confirmation, and changed-email links return through this callback so
+the server can establish the cookie session and show a useful recovery screen
+when a link is expired or already used.

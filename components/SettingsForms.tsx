@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState, useSyncExternalStore } from "react";
+import { useActionState, useState, useSyncExternalStore, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { changeEmail, changePassword, disconnectX, updateSettings, type SettingsState } from "@/app/actions/settings";
 import { Icon } from "@/components/ui";
 
@@ -27,6 +28,9 @@ export function PreferencesForm({
   username?: string | null;
 }) {
   const [state, action, pending] = useActionState(updateSettings, initialState);
+  const [disconnectState, setDisconnectState] = useState<SettingsState>(initialState);
+  const [disconnectPending, startDisconnect] = useTransition();
+  const router = useRouter();
   const [selectedTimeZone, setSelectedTimeZone] = useState(timeZone);
   const detectedTimeZone = useSyncExternalStore(
     subscribe,
@@ -67,7 +71,18 @@ export function PreferencesForm({
         <div className="settings-section-copy"><span className="settings-icon x-symbol">𝕏</span><div><h2>Connected X account</h2><p>Change the public account used to count posts and replies.</p></div></div>
         <div className="settings-fields">
           <div className="field"><label htmlFor="settings-x-username">X username</label><div className="input-prefix"><span>@</span><input id="settings-x-username" name="x_username" defaultValue={username ?? ""} placeholder="yourhandle" autoCapitalize="none" autoCorrect="off" spellCheck={false} disabled={pending} /></div></div>
-          {username && <button className="settings-danger-link" type="submit" formAction={disconnectX}>Disconnect @{username}</button>}
+          {username && (
+            <>
+              <button className="settings-danger-link" type="button" disabled={disconnectPending} onClick={() => {
+                startDisconnect(async () => {
+                  const result = await disconnectX();
+                  setDisconnectState(result);
+                  if (result.success) router.refresh();
+                });
+              }}>{disconnectPending ? "Disconnecting…" : `Disconnect @${username}`}</button>
+              <FormStatus state={disconnectState} />
+            </>
+          )}
         </div>
       </section>
 

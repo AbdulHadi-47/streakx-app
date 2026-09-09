@@ -118,6 +118,7 @@ h1, h2, h3, p { margin: 0; }
 .refresh-control { text-align: right; max-width: 260px; }
 .refresh-control .button { min-height: 40px; padding: 10px 14px; font-size: 11px; }
 .refresh-hint { display: block; font-size: 9px; color: #94949f; margin-top: 7px; }
+.refresh-hint a { color: #a8c5ff; text-decoration: underline; text-underline-offset: 2px; }
 .dashboard-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
 .account-card { display: flex; align-items: center; gap: 13px; border: 1px solid var(--border); border-radius: 10px; padding: 23px; background: #101013; }
 .account-card h2, .rhythm-note h2 { font-size: 12px; font-weight: 500; }
@@ -194,6 +195,10 @@ h1, h2, h3, p { margin: 0; }
 .field input:focus { border-color: #7ba3ed; }
 .field input::placeholder { color: #858590; font-size: 12px; }
 .field-hint { color: var(--muted); font-size: 10px; }
+.field-action { align-self: flex-start; color: #9dbdff; font-size: 10px; }
+.field-action:hover { color: #c6d8ff; }
+.field-action { align-self: flex-start; color: #9bbcff; font-size: 10px; }
+.field-action:hover { color: white; }
 .form-switch { font-size: 11px; color: var(--muted); text-align: center; margin-top: 25px; }
 .form-switch a { color: var(--blue); margin-left: 3px; }
 .form-switch a:hover { color: #a9c5ff; }

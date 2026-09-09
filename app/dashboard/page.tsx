@@ -98,7 +98,7 @@ export default async function DashboardPage() {
             <div className="progress-footer">
               <span><span className="muted-label">LAST UPDATED</span>{lastUpdated ?? "Not refreshed yet"}</span>
               {connected
-                ? <RefreshProgressButton refreshCount={dailyProgress?.refresh_count ?? 0} />
+                ? <RefreshProgressButton refreshCount={dailyProgress?.refresh_count ?? 0} timeZone={timeZone} autoSyncEnabled={profile.auto_sync_enabled ?? true} />
                 : <Link className="button button-secondary" href="/connect-x">Connect to track <Icon name="arrow" /></Link>}
             </div>
           </section>

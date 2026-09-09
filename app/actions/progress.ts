@@ -2,9 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { syncProgressForProfile } from "@/lib/progress/sync-progress";
+import { ProgressSyncError, syncProgressForProfile } from "@/lib/progress/sync-progress";
 import { createClient } from "@/lib/supabase/server";
 import { TIME_ZONE_COOKIE } from "@/lib/timezone";
+import { xRefreshErrorMessage } from "@/lib/x/errors";
 
 export type RefreshState = {
   success: boolean;
@@ -41,11 +42,19 @@ export async function refreshProgress(): Promise<RefreshState> {
       { incrementManualRefresh: true },
     );
     if (!result.success) {
-      return { success: false, message: "You've used all 3 refreshes for today." };
+      return { success: false, message: "You’ve used all 3 refreshes available for manual checks today. They reset at local midnight; automatic syncs don’t use this allowance." };
     }
   } catch (syncError) {
     console.error(syncError);
-    return { success: false, message: "Could not refresh your X activity. Try again in a moment." };
+    if (syncError instanceof ProgressSyncError) {
+      return {
+        success: false,
+        message: syncError.code === "database_read"
+          ? "We couldn’t check today’s saved progress. No refresh was used—try again."
+          : "X activity was checked, but we couldn’t save it. No refresh was used—try again.",
+      };
+    }
+    return { success: false, message: xRefreshErrorMessage(syncError, profile.x_username) };
   }
 
   revalidatePath("/dashboard");

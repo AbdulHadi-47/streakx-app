@@ -4,6 +4,7 @@ type DailyProgress = {
 };
 
 import { normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
+import { XApiError, normalizeXApiError, xApiErrorFromStatus } from "@/lib/x/errors";
 
 export async function getDailyProgress(
   username: string,
@@ -13,7 +14,7 @@ export async function getDailyProgress(
   const apiKey = process.env.TWITTER_API_IO_KEY;
 
   if (!apiKey) {
-    throw new Error("Twitter API key is missing");
+    throw new XApiError("configuration");
   }
 
   const normalizedTimeZone = normalizeTimeZone(timeZone);
@@ -36,22 +37,28 @@ export async function getDailyProgress(
       url.searchParams.set("cursor", cursor);
     }
 
-    const response = await fetch(url, {
-      headers: {
-        "X-API-Key": apiKey,
-      },
-      cache: "no-store",
-      signal: AbortSignal.timeout(12_000),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      console.error("Failed to fetch X activity:", result);
-      throw new Error("Could not fetch X activity");
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        headers: { "X-API-Key": apiKey },
+        cache: "no-store",
+        signal: AbortSignal.timeout(12_000),
+      });
+    } catch (error) {
+      throw normalizeXApiError(error);
+    }
+    if (!response.ok) throw xApiErrorFromStatus(response.status);
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new XApiError("invalid_response");
+    }
+    if (!result?.data || !Array.isArray(result.data.tweets)) {
+      throw new XApiError("invalid_response");
     }
 
-    const tweets = result.data?.tweets ?? [];
+    const tweets = result.data.tweets;
 
     if (tweets.length === 0) {
       break;

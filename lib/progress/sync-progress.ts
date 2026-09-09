@@ -10,6 +10,13 @@ export type SyncProfile = {
   time_zone?: string | null;
 };
 
+export class ProgressSyncError extends Error {
+  constructor(public code: "database_read" | "database_write") {
+    super(code);
+    this.name = "ProgressSyncError";
+  }
+}
+
 export async function syncProgressForProfile(
   supabase: SupabaseClient,
   profile: SyncProfile,
@@ -24,7 +31,7 @@ export async function syncProgressForProfile(
     .eq("user_id", profile.user_id)
     .eq("date", localDate)
     .maybeSingle();
-  if (readError) throw new Error("Could not load daily progress");
+  if (readError) throw new ProgressSyncError("database_read");
 
   const refreshCount = existing?.refresh_count ?? 0;
   if (options.incrementManualRefresh && refreshCount >= 3) {
@@ -42,6 +49,6 @@ export async function syncProgressForProfile(
     last_refreshed_at: now.toISOString(),
     updated_at: now.toISOString(),
   }, { onConflict: "user_id,date" });
-  if (writeError) throw new Error("Could not save daily progress");
+  if (writeError) throw new ProgressSyncError("database_write");
   return { success: true as const, progress, localDate };
 }

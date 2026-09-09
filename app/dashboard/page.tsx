@@ -1,15 +1,16 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import ActivityHistory, { ActivityHistoryLoading } from "@/components/ActivityHistory";
+import AppHeader from "@/components/AppHeader";
 import RefreshProgressButton from "@/components/RefreshProgressButton";
 import TimeZoneSync from "@/components/TimeZoneSync";
-import { Brand, Icon } from "@/components/ui";
+import { Icon } from "@/components/ui";
 import { GoalProgress, StreakCard } from "@/components/ProgressCards";
-import { signOut } from "@/app/actions/auth";
 import { calculateStreak } from "@/lib/streak/calculateStreak";
 import { createClient } from "@/lib/supabase/server";
-import { formatTimeZoneName, normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
+import { formatTimeZoneName, normalizeTimeZone, TIME_ZONE_COOKIE, zonedDateKey } from "@/lib/timezone";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -24,7 +25,8 @@ export default async function DashboardPage() {
   if (error) throw new Error("Could not load your profile");
   if (!profile) redirect("/onboarding");
 
-  const timeZone = normalizeTimeZone(profile.time_zone);
+  const cookieTimeZone = (await cookies()).get(TIME_ZONE_COOKIE)?.value;
+  const timeZone = normalizeTimeZone(profile.time_zone ?? cookieTimeZone);
   const timeZoneLabel = formatTimeZoneName(timeZone);
   const now = new Date();
   const today = zonedDateKey(now, timeZone);
@@ -55,22 +57,7 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="header-inner">
-          <div className="header-left"><Brand /><span className="header-divider" /><span className="nav-current">Overview</span></div>
-          <details className="account-menu">
-            <summary>
-              <span className="avatar">{(username || user.email || "S").charAt(0).toUpperCase()}</span>
-              <span className="account-name">{username ? "@" + username : "Your account"}</span>
-              <span className="chevron">⌄</span>
-            </summary>
-            <div className="account-dropdown">
-              <span className="account-email">{user.email}</span>
-              <form action={signOut}><button type="submit"><Icon name="logout" /> Log out</button></form>
-            </div>
-          </details>
-        </div>
-      </header>
+      <AppHeader current="overview" email={user.email ?? ""} username={username} />
 
       <main id="main" className="dashboard">
         <div className="dashboard-heading">

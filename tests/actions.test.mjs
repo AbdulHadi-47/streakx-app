@@ -30,6 +30,7 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
     "@/lib/supabase/server": { createClient: async () => database },
     "next/navigation": { redirect: (url) => { throw new Error(`REDIRECT:${url}`); } },
     "next/cache": { revalidatePath: (url) => invalidations.push(url) },
+    "next/headers": { cookies: async () => ({ get: () => undefined, set: () => {} }) },
     "@/lib/x/getDailyProgress": { getDailyProgress: getActivity },
     "@/lib/timezone": { normalizeTimeZone: (value) => typeof value === "string" && value ? value : "UTC" },
     "@/lib/progress/sync-progress": {

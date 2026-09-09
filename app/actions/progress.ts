@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { syncProgressForProfile } from "@/lib/progress/sync-progress";
 import { createClient } from "@/lib/supabase/server";
+import { TIME_ZONE_COOKIE } from "@/lib/timezone";
 
 export type RefreshState = {
   success: boolean;
@@ -32,9 +34,10 @@ export async function refreshProgress(): Promise<RefreshState> {
   }
 
   try {
+    const cookieTimeZone = (await cookies()).get(TIME_ZONE_COOKIE)?.value;
     const result = await syncProgressForProfile(
       supabase,
-      { ...profile, user_id: user.id },
+      { ...profile, user_id: user.id, time_zone: profile.time_zone ?? cookieTimeZone },
       { incrementManualRefresh: true },
     );
     if (!result.success) {

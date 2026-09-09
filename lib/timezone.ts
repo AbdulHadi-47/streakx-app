@@ -1,4 +1,5 @@
 export const DEFAULT_TIME_ZONE = "UTC";
+export const TIME_ZONE_COOKIE = "streakx-time-zone";
 
 export function isValidTimeZone(value: unknown): value is string {
   if (typeof value !== "string" || value.length > 100) return false;

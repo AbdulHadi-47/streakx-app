@@ -63,6 +63,17 @@ signup confirmation, and changed-email links return through this callback so
 the server can establish the cookie session and show a useful recovery screen
 when a link is expired or already used.
 
+For reliable server-side signup confirmation, change the Supabase **Confirm
+signup** email template button URL to:
+
+```text
+{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/subscribe
+```
+
+Set the Supabase Site URL to `https://streakx.online`. Clicking the confirmation
+link then verifies the address, stores the session in cookies, and opens the
+authenticated plan selection page without requiring another login.
+
 ## Creem subscriptions
 
 Streak X Pro has one feature set with two billing intervals:
@@ -70,9 +81,9 @@ Streak X Pro has one feature set with two billing intervals:
 - Monthly: `$9.99` every month
 - Yearly: `$99.99` every year, saving almost two monthly payments
 
-Create both as recurring SaaS products in Creem and configure a seven-day free
-trial on each product. Creem test products, API keys, and webhook secrets are
-separate from production, so complete the first setup in test mode.
+Create both as recurring SaaS products without a free trial. Creem test
+products, API keys, and webhook secrets are separate from production, so
+complete the first setup in test mode.
 
 1. Apply `supabase/migrations/202609110001_creem_subscriptions.sql` in the
    Supabase SQL editor.
@@ -101,7 +112,7 @@ separate from production, so complete the first setup in test mode.
 The app derives the checkout email and user reference from the authenticated
 Supabase session. The webhook verifies Creem's signature and applies events in
 timestamp order. Dashboard access, manual refreshes, goal changes, X account
-connections, and automatic sync all require an active or trialing subscription.
+connections, and automatic sync all require an active paid subscription.
 Active customers can manage cancellation and payment details through Creem's
 customer portal from Settings.
 

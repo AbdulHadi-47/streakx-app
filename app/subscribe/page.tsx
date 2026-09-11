@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import PricingCards from "@/components/PricingCards";
 import { createClient } from "@/lib/supabase/server";
-import { getSubscription, subscriptionHasAccess } from "@/lib/billing/subscription";
+import { getSubscriptionLookup, subscriptionHasAccess } from "@/lib/billing/subscription";
 
 export const metadata: Metadata = { title: "Choose your plan" };
 
@@ -12,11 +12,11 @@ export default async function SubscribePage({ searchParams }: { searchParams: Pr
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const subscription = await getSubscription(supabase, user.id);
+  const { subscription, available: billingAvailable } = await getSubscriptionLookup(supabase, user.id);
   if (subscriptionHasAccess(subscription)) redirect("/dashboard");
   const { data: profile } = await supabase.from("profiles").select("x_username").eq("user_id", user.id).maybeSingle();
   const { reason } = await searchParams;
-  const configured = Boolean(process.env.CREEM_API_KEY && process.env.CREEM_MONTHLY_PRODUCT_ID && process.env.CREEM_YEARLY_PRODUCT_ID);
+  const configured = Boolean(billingAvailable && process.env.CREEM_API_KEY && process.env.CREEM_MONTHLY_PRODUCT_ID && process.env.CREEM_YEARLY_PRODUCT_ID);
 
   return (
     <>
@@ -24,9 +24,15 @@ export default async function SubscribePage({ searchParams }: { searchParams: Pr
       <main id="main" className="pricing-page subscribe-page">
         <header className="pricing-heading">
           <span className="eyebrow"><span className="blue-dot" /> STREAK X PRO</span>
-          <h1>{subscription ? "Keep your momentum going." : "Start your seven-day trial."}</h1>
-          <p>{reason === "payment" ? "Your plan needs attention before tracking can continue." : "Choose monthly flexibility or save two months with yearly billing."}</p>
+          <h1>{subscription ? "Keep your momentum going." : "Choose your plan."}</h1>
+          <p>{reason === "payment" ? "Your plan needs attention before tracking can continue." : "Choose monthly flexibility or save almost two months with yearly billing."}</p>
         </header>
+        {reason === "setup" && !billingAvailable && (
+          <div className="billing-notice" role="status">
+            <strong>Billing setup is not finished</strong>
+            <span>Apply the subscriptions migration before accepting payments. Your account is signed in and safe.</span>
+          </div>
+        )}
         {subscription && !subscriptionHasAccess(subscription) && (
           <div className="billing-notice" role="status">
             <strong>{subscription.status === "past_due" || subscription.status === "unpaid" ? "Payment needs attention" : "Your subscription is inactive"}</strong>

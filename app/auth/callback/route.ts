@@ -2,7 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const safeDestinations = new Set(["/dashboard", "/reset-password", "/settings"]);
+const safeDestinations = new Set(["/dashboard", "/subscribe", "/reset-password", "/settings"]);
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;

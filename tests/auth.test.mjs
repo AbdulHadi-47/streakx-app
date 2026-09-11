@@ -83,10 +83,16 @@ test("missing sessions and service failures cannot look like successful logins",
 });
 
 test("signup requiring email confirmation stays on the form with instructions", async () => {
-  const actions = authActions({ signUp: async () => ({ data: { session: null }, error: null }) });
+  let request;
+  const actions = authActions({ signUp: async (payload) => {
+    request = payload;
+    return { data: { session: null }, error: null };
+  } });
   const state = await actions.signUp({}, loginForm());
   assert.equal(state.success, true);
   assert.match(state.message, /confirm your email/);
+  assert.match(state.message, /automatically/);
+  assert.equal(request.options.emailRedirectTo, "http://localhost:3000/auth/callback?next=/subscribe");
   assert.equal(actions.events.length, 0);
 });
 
@@ -120,6 +126,7 @@ test("expired-link replacement sends a fresh signup confirmation", async () => {
   assert.equal((await actions.resendConfirmation({}, data)).success, true);
   assert.equal(request.type, "signup");
   assert.match(request.options.emailRedirectTo, /\/auth\/callback/);
+  assert.match(request.options.emailRedirectTo, /next=\/subscribe/);
 });
 
 test("recovered passwords require a live recovery session", async () => {

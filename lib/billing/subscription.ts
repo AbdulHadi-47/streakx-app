@@ -11,7 +11,18 @@ export type SubscriptionRecord = {
   cancel_at_period_end: boolean;
 };
 
-const ACTIVE_STATUSES = new Set(["active", "trialing", "scheduled_cancel"]);
+const ACTIVE_STATUSES = new Set(["active", "scheduled_cancel"]);
+
+type SubscriptionError = { code?: string; message?: string };
+
+export function isSubscriptionStoreUnavailable(error: SubscriptionError | null) {
+  return Boolean(error && (
+    error.code === "42P01" ||
+    error.code === "PGRST205" ||
+    error.message?.includes("public.subscriptions") ||
+    error.message?.includes("relation \"subscriptions\" does not exist")
+  ));
+}
 
 export function subscriptionHasAccess(subscription: Pick<SubscriptionRecord, "status" | "current_period_end"> | null, now = new Date()) {
   if (!subscription) return false;
@@ -25,12 +36,24 @@ export function subscriptionHasAccess(subscription: Pick<SubscriptionRecord, "st
   return false;
 }
 
-export async function getSubscription(supabase: SupabaseClient, userId: string) {
+export async function getSubscriptionLookup(supabase: SupabaseClient, userId: string) {
   const { data, error } = await supabase
     .from("subscriptions")
     .select("user_id, creem_customer_id, creem_subscription_id, creem_product_id, billing_interval, status, current_period_end, cancel_at_period_end")
     .eq("user_id", userId)
     .maybeSingle();
-  if (error) throw new Error("Could not load your subscription");
-  return data as SubscriptionRecord | null;
+  if (error) {
+    console.error("Could not load subscription:", error);
+    if (isSubscriptionStoreUnavailable(error)) {
+      return { subscription: null, available: false } as const;
+    }
+    throw new Error("Could not load your subscription");
+  }
+  return { subscription: data as SubscriptionRecord | null, available: true } as const;
+}
+
+export async function getSubscription(supabase: SupabaseClient, userId: string) {
+  const lookup = await getSubscriptionLookup(supabase, userId);
+  if (!lookup.available) throw new Error("Subscription storage is not configured");
+  return lookup.subscription;
 }

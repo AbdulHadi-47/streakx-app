@@ -39,7 +39,7 @@ const faqs = [
   },
   {
     question: "How much does Streak X cost?",
-    answer: "Streak X Pro is $9.99 per month or $99.99 per year. The yearly plan saves almost two full months. Both plans begin with a seven-day trial and can be managed through Creem.",
+    answer: "Streak X Pro is $9.99 per month or $99.99 per year. The yearly plan saves almost two full months, and billing can be managed through Creem.",
   },
 ];
 
@@ -163,7 +163,7 @@ export default function Home() {
         <section id="pricing" className="landing-pricing" aria-labelledby="pricing-title">
           <div className="marketing-section-heading">
             <div><span className="eyebrow">ONE PLAN. YOUR CHOICE OF RHYTHM.</span><h2 id="pricing-title">Build momentum.<br /><span className="muted-heading">Keep it affordable.</span></h2></div>
-            <p>Everything you need to make consistency visible, with a seven-day trial before your first charge.</p>
+            <p>Everything you need to make consistency visible, with simple monthly or yearly billing.</p>
           </div>
           <PricingCards />
         </section>

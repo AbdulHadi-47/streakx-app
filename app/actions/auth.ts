@@ -15,7 +15,7 @@ function credentials(formData: FormData) {
 
 function authMessage(error: { code?: string; message: string; status?: number }) {
   if (error.code === "email_not_confirmed") {
-    return "Please confirm your email using the link in your inbox, then log in.";
+    return "Please confirm your email using the link in your inbox. The link will sign you in.";
   }
   if (error.code === "invalid_credentials") {
     return "That email and password don’t match. Please try again.";
@@ -62,11 +62,11 @@ export async function signUp(_previous: AuthState, formData: FormData): Promise<
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${await getSiteUrl()}/auth/callback?next=/dashboard` },
+      options: { emailRedirectTo: `${await getSiteUrl()}/auth/callback?next=/subscribe` },
     });
     if (error) return { success: false, message: authMessage(error), email };
     if (!data.session) {
-      return { success: true, message: "Check your inbox to confirm your email, then come back to log in.", email };
+      return { success: true, message: "Check your inbox to confirm your email. The confirmation link will sign you in automatically.", email };
     }
   } catch {
     return { success: false, message: "We couldn’t create your account. Please try again.", email };
@@ -100,7 +100,7 @@ export async function resendConfirmation(_previous: RecoveryState, formData: For
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
-      options: { emailRedirectTo: `${await getSiteUrl()}/auth/callback?next=/dashboard` },
+      options: { emailRedirectTo: `${await getSiteUrl()}/auth/callback?next=/subscribe` },
     });
     if (error?.status === 429) return { success: false, message: "Too many requests. Wait a few minutes and try again.", email };
     if (error) return { success: false, message: "We couldn’t resend the confirmation email.", email };

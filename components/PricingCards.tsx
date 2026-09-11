@@ -18,7 +18,7 @@ export default function PricingCards({ checkout = false, configured = true }: { 
             <p>{interval === "yearly" ? "$8.33 per month, billed annually. Save almost two full months." : "Simple monthly billing with the freedom to cancel anytime."}</p>
             {configured ? (
               <Link className={`button button-full ${interval === "monthly" ? "button-secondary" : ""}`} href={href}>
-                Start 7-day trial <Icon name="arrow" />
+                Choose {plan.label.toLowerCase()} <Icon name="arrow" />
               </Link>
             ) : (
               <button className="button button-full" type="button" disabled>Checkout setup required</button>

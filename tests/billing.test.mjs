@@ -14,13 +14,19 @@ function loadSubscriptionModule() {
   return cjsModule.exports;
 }
 
-const { subscriptionHasAccess } = loadSubscriptionModule();
+const { isSubscriptionStoreUnavailable, subscriptionHasAccess } = loadSubscriptionModule();
 const now = new Date("2026-09-11T12:00:00.000Z");
 
-test("active subscription and free trial grant product access", () => {
+test("recognized active subscription states grant product access", () => {
   assert.equal(subscriptionHasAccess({ status: "active", current_period_end: null }, now), true);
-  assert.equal(subscriptionHasAccess({ status: "trialing", current_period_end: null }, now), true);
   assert.equal(subscriptionHasAccess({ status: "scheduled_cancel", current_period_end: "2026-10-11T12:00:00.000Z" }, now), true);
+  assert.equal(subscriptionHasAccess({ status: "trialing", current_period_end: "2026-09-18T12:00:00.000Z" }, now), false);
+});
+
+test("missing subscriptions storage is distinguished from an unpaid account", () => {
+  assert.equal(isSubscriptionStoreUnavailable({ code: "42P01", message: "missing relation" }), true);
+  assert.equal(isSubscriptionStoreUnavailable({ code: "PGRST205", message: "schema cache" }), true);
+  assert.equal(isSubscriptionStoreUnavailable({ code: "42501", message: "permission denied" }), false);
 });
 
 test("canceled and past-due subscriptions retain paid access only through period end", () => {

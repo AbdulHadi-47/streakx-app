@@ -13,7 +13,7 @@ export default function PricingPage() {
         <header className="pricing-heading">
           <span className="eyebrow"><span className="blue-dot" /> SIMPLE PRICING. SERIOUS CONSISTENCY.</span>
           <h1>One plan.<br /><span className="muted-heading">Every reason to show up.</span></h1>
-          <p>Start free for seven days. Then choose the rhythm that works for you.</p>
+          <p>Choose the billing rhythm that works for you and start building a visible streak.</p>
         </header>
         <PricingCards />
         <p className="pricing-footnote">Prices are in USD. Taxes may apply. Payments are securely handled by Creem.</p>

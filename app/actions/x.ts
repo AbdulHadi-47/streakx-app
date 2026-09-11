@@ -5,11 +5,13 @@ import { createClient } from "@/lib/supabase/server";
 import type { SetupState } from "@/lib/form-state";
 import { getXAccount } from "@/lib/x/getXAccount";
 import { xConnectionErrorMessage } from "@/lib/x/errors";
+import { getSubscription, subscriptionHasAccess } from "@/lib/billing/subscription";
 
 export async function connectX(_previousState: SetupState, formData: FormData): Promise<SetupState> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  if (!subscriptionHasAccess(await getSubscription(supabase, user.id))) redirect("/subscribe");
 
   const username = String(formData.get("username") || "").trim().replace(/^@/, "");
   if (!/^[A-Za-z0-9_]{1,15}$/.test(username)) {

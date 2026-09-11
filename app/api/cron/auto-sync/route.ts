@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { syncProgressForProfile, type SyncProfile } from "@/lib/progress/sync-progress";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { subscriptionHasAccess, type SubscriptionRecord } from "@/lib/billing/subscription";
 import { dueAutoSyncSlot, dueAutoSyncSlotForUser, normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
@@ -26,18 +27,27 @@ async function runAutoSync(request: Request) {
 
   const supabase = createAdminClient();
   const now = new Date();
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("user_id, x_username, daily_post_goal, daily_reply_goal, time_zone")
-    .eq("auto_sync_enabled", true)
-    .not("x_username", "is", null);
+  const [{ data: profiles, error }, { data: subscriptions, error: subscriptionError }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("user_id, x_username, daily_post_goal, daily_reply_goal, time_zone")
+      .eq("auto_sync_enabled", true)
+      .not("x_username", "is", null),
+    supabase
+      .from("subscriptions")
+      .select("user_id, status, current_period_end"),
+  ]);
 
-  if (error) {
-    console.error("Could not load profiles for automatic sync:", error);
+  if (error || subscriptionError) {
+    console.error("Could not load automatic sync accounts:", error ?? subscriptionError);
     return NextResponse.json({ error: "Could not load sync profiles" }, { status: 500 });
   }
 
-  const profilesInWindow = (profiles ?? []).flatMap((profile) => {
+  const paidUserIds = new Set((subscriptions ?? [])
+    .filter((subscription) => subscriptionHasAccess(subscription as SubscriptionRecord, now))
+    .map((subscription) => subscription.user_id));
+
+  const profilesInWindow = (profiles ?? []).filter((profile) => paidUserIds.has(profile.user_id)).flatMap((profile) => {
     const timeZone = normalizeTimeZone(profile.time_zone);
     const slot = dueAutoSyncSlot(now, timeZone);
     return slot ? [{ profile: profile as SyncProfile, timeZone, slot }] : [];

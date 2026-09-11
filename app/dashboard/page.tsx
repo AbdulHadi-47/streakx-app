@@ -9,6 +9,7 @@ import TimeZoneSync from "@/components/TimeZoneSync";
 import { Icon } from "@/components/ui";
 import { GoalProgress, StreakCard } from "@/components/ProgressCards";
 import { calculateStreak } from "@/lib/streak/calculateStreak";
+import { getSubscription, subscriptionHasAccess } from "@/lib/billing/subscription";
 import { createClient } from "@/lib/supabase/server";
 import { formatTimeZoneName, normalizeTimeZone, TIME_ZONE_COOKIE, zonedDateKey } from "@/lib/timezone";
 
@@ -16,6 +17,8 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const subscription = await getSubscription(supabase, user.id);
+  if (!subscriptionHasAccess(subscription)) redirect("/subscribe");
 
   const { data: profile, error } = await supabase
     .from("profiles")

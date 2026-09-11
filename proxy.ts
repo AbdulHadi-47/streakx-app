@@ -37,5 +37,5 @@ export async function proxy(request: NextRequest) {
 
 // The public homepage and its assets never wait for authentication.
 export const config = {
-  matcher: ["/dashboard/:path*", "/settings/:path*", "/reset-password/:path*", "/onboarding/:path*", "/connect-x/:path*"],
+  matcher: ["/dashboard/:path*", "/settings/:path*", "/subscribe/:path*", "/checkout/:path*", "/billing/:path*", "/reset-password/:path*", "/onboarding/:path*", "/connect-x/:path*"],
 };

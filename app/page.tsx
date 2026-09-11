@@ -3,6 +3,7 @@ import { Brand, Icon, PublicHeader } from "@/components/ui";
 import { GoalProgress, StreakCard } from "@/components/ProgressCards";
 import ActivityHeatmap from "@/components/ActivityHeatmap";
 import { DEMO_TODAY, demoActivity } from "@/lib/activity/demo";
+import PricingCards from "@/components/PricingCards";
 
 // Marketing content is independent of sessions and can be built ahead of time.
 export const dynamic = "error";
@@ -35,6 +36,10 @@ const faqs = [
   {
     question: "Does Streak X write or publish posts for me?",
     answer: "You post and reply directly on X. Streak X is your daily check-in for goals, progress, and consistency.",
+  },
+  {
+    question: "How much does Streak X cost?",
+    answer: "Streak X Pro is $9.99 per month or $99.99 per year. The yearly plan saves almost two full months. Both plans begin with a seven-day trial and can be managed through Creem.",
   },
 ];
 
@@ -155,6 +160,14 @@ export default function Home() {
           <span className="eyebrow">THAT’S WHAT STREAK X IS HERE FOR.</span>
         </section>
 
+        <section id="pricing" className="landing-pricing" aria-labelledby="pricing-title">
+          <div className="marketing-section-heading">
+            <div><span className="eyebrow">ONE PLAN. YOUR CHOICE OF RHYTHM.</span><h2 id="pricing-title">Build momentum.<br /><span className="muted-heading">Keep it affordable.</span></h2></div>
+            <p>Everything you need to make consistency visible, with a seven-day trial before your first charge.</p>
+          </div>
+          <PricingCards />
+        </section>
+
         <section id="faq" className="faq-section" aria-labelledby="faq-title">
           <div className="faq-heading">
             <span className="eyebrow">A FEW THINGS TO KNOW</span>
@@ -185,6 +198,7 @@ export default function Home() {
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
           <a href="#faq">FAQs</a>
+          <Link href="/pricing">Pricing</Link>
           <Link href="/dashboard">Open app <Icon name="arrow" /></Link>
         </nav>
         <span>Built for the ones who keep showing up.</span>

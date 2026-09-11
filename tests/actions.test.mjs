@@ -29,6 +29,10 @@ function loadAction(file, { user = { id: "test-user" }, reads = [], writeError =
   class ProgressSyncError extends Error {}
   const dependencies = {
     "@/lib/supabase/server": { createClient: async () => database },
+    "@/lib/billing/subscription": {
+      getSubscription: async () => ({ status: "active", current_period_end: null }),
+      subscriptionHasAccess: () => true,
+    },
     "next/navigation": { redirect: (url) => { throw new Error(`REDIRECT:${url}`); } },
     "next/cache": { revalidatePath: (url) => invalidations.push(url) },
     "next/headers": { cookies: async () => ({ get: () => undefined, set: () => {} }) },

@@ -7,7 +7,7 @@ export default function AppHeader({
   email,
   username,
 }: {
-  current: "overview" | "settings";
+  current: "overview" | "settings" | "billing";
   email: string;
   username?: string | null;
 }) {
@@ -21,6 +21,7 @@ export default function AppHeader({
           <nav className="app-nav" aria-label="App navigation">
             <Link className={current === "overview" ? "active" : ""} href="/dashboard">Overview</Link>
             <Link className={current === "settings" ? "active" : ""} href="/settings">Settings</Link>
+            <Link className={current === "billing" ? "active" : ""} href="/settings#billing">Billing</Link>
           </nav>
         </div>
         <details className="account-menu">

@@ -6,6 +6,7 @@ import { ProgressSyncError, syncProgressForProfile } from "@/lib/progress/sync-p
 import { createClient } from "@/lib/supabase/server";
 import { TIME_ZONE_COOKIE } from "@/lib/timezone";
 import { xRefreshErrorMessage } from "@/lib/x/errors";
+import { getSubscription, subscriptionHasAccess } from "@/lib/billing/subscription";
 
 export type RefreshState = {
   success: boolean;
@@ -18,6 +19,9 @@ export async function refreshProgress(): Promise<RefreshState> {
 
   if (!user) {
     return { success: false, message: "Your session has expired. Please log in again." };
+  }
+  if (!subscriptionHasAccess(await getSubscription(supabase, user.id))) {
+    return { success: false, message: "Choose a Streak X Pro plan to refresh your progress." };
   }
 
   const { data: profile, error } = await supabase

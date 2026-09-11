@@ -62,3 +62,50 @@ and `https://your-domain.com/auth/callback` for production. Password recovery,
 signup confirmation, and changed-email links return through this callback so
 the server can establish the cookie session and show a useful recovery screen
 when a link is expired or already used.
+
+## Creem subscriptions
+
+Streak X Pro has one feature set with two billing intervals:
+
+- Monthly: `$9.99` every month
+- Yearly: `$99.99` every year, saving almost two monthly payments
+
+Create both as recurring SaaS products in Creem and configure a seven-day free
+trial on each product. Creem test products, API keys, and webhook secrets are
+separate from production, so complete the first setup in test mode.
+
+1. Apply `supabase/migrations/202609110001_creem_subscriptions.sql` in the
+   Supabase SQL editor.
+2. Create the monthly and yearly products in the Creem test dashboard. Copy
+   their product IDs.
+3. Create a Creem webhook for
+   `https://streakx.online/api/creem/webhook`, subscribe to all subscription
+   events, and copy its signing secret.
+4. Configure the following server environment variables in Vercel:
+
+   ```env
+   SUPABASE_SECRET_KEY=sb_secret_...
+   CREEM_API_KEY=creem_test_...
+   CREEM_WEBHOOK_SECRET=...
+   CREEM_MONTHLY_PRODUCT_ID=prod_...
+   CREEM_YEARLY_PRODUCT_ID=prod_...
+   CREEM_TEST_MODE=true
+   ```
+
+5. Redeploy, sign in, choose a plan at `/subscribe`, finish a test checkout,
+   and confirm that the user receives a row in `public.subscriptions`.
+6. Before launch, create or copy the products and webhook in Creem production,
+   replace all Creem values with production values, set
+   `CREEM_TEST_MODE=false`, and redeploy.
+
+The app derives the checkout email and user reference from the authenticated
+Supabase session. The webhook verifies Creem's signature and applies events in
+timestamp order. Dashboard access, manual refreshes, goal changes, X account
+connections, and automatic sync all require an active or trialing subscription.
+Active customers can manage cancellation and payment details through Creem's
+customer portal from Settings.
+
+Creem documentation: [create a product](https://docs.creem.io/guides/create-your-first-product),
+[Next.js adapter](https://docs.creem.io/code/sdks/nextjs),
+[webhooks](https://docs.creem.io/code/webhooks), and
+[customer portal](https://docs.creem.io/features/customer-portal).

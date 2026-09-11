@@ -446,6 +446,12 @@ h1, h2, h3, p { margin: 0; }
 /* Public product page */
 html { scroll-behavior: smooth; scroll-padding-top: 105px; }
 .marketing-header { position: sticky; top: 0; z-index: 10; background: #09090bf5; }
+.public-account-nav { display: flex; align-items: center; justify-content: flex-end; gap: 24px; min-width: 181px; }
+.public-account-nav.loading > span { display: block; width: 126px; height: 36px; border: 1px solid #292931; border-radius: 7px; background: #141419; opacity: .65; }
+.public-account-nav.signed-in { min-width: 118px; }
+.marketing-account-menu summary { min-height: 40px; padding: 5px 9px 5px 6px; border: 1px solid #303039; border-radius: 8px; background: #151519; }
+.marketing-account-menu summary:hover { border-color: #464653; background: #1a1a20; }
+.marketing-account-menu .account-dropdown { right: 0; top: calc(100% + 9px); min-width: 220px; }
 .marketing-nav a { color: #a5a5b1; font-size: 12px; }
 .marketing-nav a:hover { color: #f4f4f5; }
 .hero-actions { display: flex; align-items: center; gap: 26px; margin-top: 29px; }
@@ -662,6 +668,10 @@ html { scroll-behavior: smooth; scroll-padding-top: 105px; }
   .marketing-header .header-inner > nav { gap: 12px; }
   .marketing-header .text-link { white-space: nowrap; }
   .marketing-header .button-small { padding-inline: 11px; font-size: 11px; }
+  .public-account-nav { min-width: auto; gap: 12px; }
+  .public-account-nav.loading > span { width: 88px; }
+  .public-account-nav .text-link { display: none; }
+  .marketing-account-menu summary { min-height: 38px; }
   .marketing-header .brand { font-size: 23px; }
   .heatmap-heading { flex-wrap: wrap; gap: 15px; }
   .heatmap-heading h2 { font-size: 15px; }

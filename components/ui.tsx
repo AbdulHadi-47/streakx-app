@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import PublicAccountNav from "@/components/PublicAccountNav";
+import TopLink from "@/components/TopLink";
 
 export type IconName = "arrow" | "flame" | "post" | "reply" | "check" | "refresh" | "trophy" | "target" | "logout" | "external" | "settings" | "lock" | "card";
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
@@ -21,7 +23,7 @@ export function Icon({ name, className = "" }: { name: IconName; className?: str
   return <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 export function Brand() {
-  return <Link href="/" className="brand" aria-label="Streak X home"><span className="brand-mark" aria-hidden="true"><span /><span /><span /></span>streak<span className="brand-x">x</span><span className="brand-dot" /></Link>;
+  return <TopLink href="/#page-top" className="brand" ariaLabel="Streak X home"><span className="brand-mark" aria-hidden="true"><span /><span /><span /></span>streak<span className="brand-x">x</span><span className="brand-dot" /></TopLink>;
 }
 export function PublicHeader() {
   return (
@@ -31,13 +33,10 @@ export function PublicHeader() {
         <nav className="marketing-nav" aria-label="Product navigation">
           <Link href="/#features">Features</Link>
           <Link href="/#how-it-works">How it works</Link>
-          <Link href="/pricing">Pricing</Link>
+          <TopLink href="/pricing#page-top">Pricing</TopLink>
           <Link href="/#faq">FAQs</Link>
         </nav>
-        <nav aria-label="Account navigation">
-          <Link className="text-link" href="/dashboard">Open app</Link>
-          <Link className="button button-small" href="/signup">Get started <Icon name="arrow" /></Link>
-        </nav>
+        <PublicAccountNav />
       </div>
     </header>
   );

@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body><a className="skip-link" href="#main">Skip to content</a>{children}</body>
+      <body id="page-top"><a className="skip-link" href="#main">Skip to content</a>{children}</body>
     </html>
   );
 }

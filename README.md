@@ -43,15 +43,16 @@ characters to the server environment; never expose either value through a
 `NEXT_PUBLIC_` variable.
 
 Configure the production scheduler to send a GET request to
-`/api/cron/auto-sync` every 15 minutes with the header
+`/api/cron/auto-sync` every minute with the header
 `Authorization: Bearer <CRON_SECRET>`. The endpoint checks each user's IANA
-time zone and only syncs users whose local time is 12:00–12:19 PM or
-11:45–11:59 PM. Database claims make scheduler retries idempotent.
+time zone and assigns each user a stable minute inside 12:00–12:19 PM and
+11:45–11:59 PM. It runs three user syncs concurrently, while database claims
+make scheduler retries idempotent.
 
 Vercel can supply the authorization header automatically when the environment
 variable is named `CRON_SECRET`. Its Hobby plan only supports daily cron
-jobs, so the 15-minute schedule requires a plan or scheduler that supports that
-frequency.
+jobs, so the one-minute schedule requires a plan or scheduler that supports
+that frequency.
 
 ## Authentication links
 

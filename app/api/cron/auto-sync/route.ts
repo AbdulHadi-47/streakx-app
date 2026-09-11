@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { syncProgressForProfile, type SyncProfile } from "@/lib/progress/sync-progress";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { dueAutoSyncSlot, normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
+import { dueAutoSyncSlot, dueAutoSyncSlotForUser, normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
 
 export const dynamic = "force-dynamic";
 
@@ -37,16 +37,29 @@ async function runAutoSync(request: Request) {
     return NextResponse.json({ error: "Could not load sync profiles" }, { status: 500 });
   }
 
-  const dueProfiles = (profiles ?? []).flatMap((profile) => {
+  const profilesInWindow = (profiles ?? []).flatMap((profile) => {
     const timeZone = normalizeTimeZone(profile.time_zone);
     const slot = dueAutoSyncSlot(now, timeZone);
     return slot ? [{ profile: profile as SyncProfile, timeZone, slot }] : [];
   });
 
-  const results = { due: dueProfiles.length, synced: 0, skipped: 0, failed: 0 };
+  const dueProfiles = profilesInWindow.filter(({ profile, timeZone }) =>
+    dueAutoSyncSlotForUser(now, timeZone, profile.user_id),
+  );
 
-  for (let index = 0; index < dueProfiles.length; index += 5) {
-    const batch = dueProfiles.slice(index, index + 5);
+  const results = {
+    inWindow: profilesInWindow.length,
+    due: dueProfiles.length,
+    deferred: profilesInWindow.length - dueProfiles.length,
+    synced: 0,
+    skipped: 0,
+    failed: 0,
+  };
+
+  // Keep automatic work well below the provider's 20 QPS ceiling and leave
+  // capacity available for user-triggered dashboard refreshes.
+  for (let index = 0; index < dueProfiles.length; index += 3) {
+    const batch = dueProfiles.slice(index, index + 3);
     await Promise.all(batch.map(async ({ profile, timeZone, slot }) => {
       const localDate = zonedDateKey(now, timeZone);
       const { data: claimed, error: claimError } = await supabase.rpc("claim_auto_sync", {

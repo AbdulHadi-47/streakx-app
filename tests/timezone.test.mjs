@@ -25,6 +25,36 @@ test("automatic sync windows follow local noon and end of day", () => {
   assert.equal(timezone.dueAutoSyncSlot(new Date("2026-07-01T19:05:00Z"), "America/Los_Angeles"), "midday");
 });
 
+test("automatic sync distributes users across each local window", () => {
+  const middayMinutes = new Set();
+  const endOfDayMinutes = new Set();
+
+  for (let index = 0; index < 200; index++) {
+    const userId = `user-${index}`;
+    const midday = timezone.assignedAutoSyncMinute(userId, "midday");
+    const endOfDay = timezone.assignedAutoSyncMinute(userId, "end_of_day");
+    assert.ok(midday >= 720 && midday <= 739);
+    assert.ok(endOfDay >= 1425 && endOfDay <= 1439);
+    assert.equal(midday, timezone.assignedAutoSyncMinute(userId, "midday"));
+    middayMinutes.add(midday);
+    endOfDayMinutes.add(endOfDay);
+  }
+
+  assert.equal(middayMinutes.size, 20);
+  assert.equal(endOfDayMinutes.size, 15);
+});
+
+test("a user becomes eligible at their assigned minute and remains retryable", () => {
+  const userId = "82e3dcb1-970b-4b2c-b82b-46a779aea7ba";
+  const assignedMinute = timezone.assignedAutoSyncMinute(userId, "midday");
+  const before = new Date(`2026-09-09T${String(Math.floor((assignedMinute - 300 - 1) / 60)).padStart(2, "0")}:${String((assignedMinute - 301) % 60).padStart(2, "0")}:00Z`);
+  const assigned = new Date(`2026-09-09T${String(Math.floor((assignedMinute - 300) / 60)).padStart(2, "0")}:${String((assignedMinute - 300) % 60).padStart(2, "0")}:00Z`);
+
+  assert.equal(timezone.dueAutoSyncSlotForUser(before, "Asia/Karachi", userId), null);
+  assert.equal(timezone.dueAutoSyncSlotForUser(assigned, "Asia/Karachi", userId), "midday");
+  assert.equal(timezone.dueAutoSyncSlotForUser(new Date("2026-09-09T07:19:00Z"), "Asia/Karachi", userId), "midday");
+});
+
 test("invalid time zones safely fall back to UTC", () => {
   assert.equal(timezone.normalizeTimeZone("Not/A_Zone"), "UTC");
   assert.equal(timezone.zonedDateKey(new Date("2026-09-09T23:30:00Z"), "Not/A_Zone"), "2026-09-09");
@@ -58,6 +88,7 @@ test("X activity is counted inside the user's local date boundary", async () => 
         normalizeXApiError: (error) => error,
         xApiErrorFromStatus: () => new Error("provider error"),
       };
+      if (name === "@/lib/x/rateLimit") return { waitForXApiSlot: async () => {} };
       throw new Error("Unexpected dependency: " + name);
     },
     process: { env: { TWITTER_API_IO_KEY: "test-only" } },

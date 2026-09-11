@@ -5,6 +5,7 @@ type DailyProgress = {
 
 import { normalizeTimeZone, zonedDateKey } from "@/lib/timezone";
 import { XApiError, normalizeXApiError, xApiErrorFromStatus } from "@/lib/x/errors";
+import { waitForXApiSlot } from "@/lib/x/rateLimit";
 
 export async function getDailyProgress(
   username: string,
@@ -39,6 +40,7 @@ export async function getDailyProgress(
 
     let response: Response;
     try {
+      await waitForXApiSlot();
       response = await fetch(url, {
         headers: { "X-API-Key": apiKey },
         cache: "no-store",

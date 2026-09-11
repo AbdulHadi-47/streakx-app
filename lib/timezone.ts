@@ -41,12 +41,39 @@ export function zonedMinutes(date: Date, timeZone: string) {
 
 export type AutoSyncSlot = "midday" | "end_of_day";
 
+const AUTO_SYNC_WINDOWS = {
+  midday: { start: 12 * 60, duration: 20 },
+  end_of_day: { start: 23 * 60 + 45, duration: 15 },
+} as const satisfies Record<AutoSyncSlot, { start: number; duration: number }>;
+
 export function dueAutoSyncSlot(date: Date, timeZone: string): AutoSyncSlot | null {
   const minutes = zonedMinutes(date, timeZone);
-  // A scheduler running every 15 minutes gets a five-minute grace period.
-  if (minutes >= 12 * 60 && minutes < 12 * 60 + 20) return "midday";
-  if (minutes >= 23 * 60 + 45 && minutes < 24 * 60) return "end_of_day";
+  if (minutes >= AUTO_SYNC_WINDOWS.midday.start && minutes < AUTO_SYNC_WINDOWS.midday.start + AUTO_SYNC_WINDOWS.midday.duration) return "midday";
+  if (minutes >= AUTO_SYNC_WINDOWS.end_of_day.start && minutes < AUTO_SYNC_WINDOWS.end_of_day.start + AUTO_SYNC_WINDOWS.end_of_day.duration) return "end_of_day";
   return null;
+}
+
+function stableHash(value: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function assignedAutoSyncMinute(userId: string, slot: AutoSyncSlot) {
+  const window = AUTO_SYNC_WINDOWS[slot];
+  return window.start + stableHash(`${slot}:${userId}`) % window.duration;
+}
+
+export function dueAutoSyncSlotForUser(date: Date, timeZone: string, userId: string): AutoSyncSlot | null {
+  const slot = dueAutoSyncSlot(date, timeZone);
+  if (!slot) return null;
+
+  // Once a user's assigned minute arrives, keep them eligible for the rest of
+  // the window so a failed or interrupted run can retry safely.
+  return zonedMinutes(date, timeZone) >= assignedAutoSyncMinute(userId, slot) ? slot : null;
 }
 
 export function formatTimeZoneName(timeZone: string) {

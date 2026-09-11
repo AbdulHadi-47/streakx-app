@@ -1,4 +1,5 @@
 import { XApiError, normalizeXApiError, xApiErrorFromStatus } from "@/lib/x/errors";
+import { waitForXApiSlot } from "@/lib/x/rateLimit";
 
 export async function getXAccount(username: string) {
   const apiKey = process.env.TWITTER_API_IO_KEY;
@@ -7,6 +8,7 @@ export async function getXAccount(username: string) {
   url.searchParams.set("userName", username);
   let response: Response;
   try {
+    await waitForXApiSlot();
     response = await fetch(url, {
       headers: { "X-API-Key": apiKey },
       cache: "no-store",

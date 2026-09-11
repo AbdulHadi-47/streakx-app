@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signIn, signUp } from "@/app/actions/auth";
 import { Icon } from "@/components/ui";
+import TopLink from "@/components/TopLink";
 import type { AuthState } from "@/lib/form-state";
 
 const initialState: AuthState = { success: false, message: "", email: "" };
@@ -55,7 +56,7 @@ export default function AuthForm({ mode, notice = "" }: { mode: "login" | "signu
       </p>
       {signup && (
         <p className="auth-legal">
-          By creating an account, you agree to the <Link href="/terms">Terms of Service</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.
+          By creating an account, you agree to the <TopLink href="/terms#page-top">Terms of Service</TopLink> and acknowledge the <TopLink href="/privacy#page-top">Privacy Policy</TopLink>.
         </p>
       )}
     </>

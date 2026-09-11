@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PricingCards from "@/components/PricingCards";
 import { PublicHeader } from "@/components/ui";
+import TopLink from "@/components/TopLink";
 
 export const metadata: Metadata = { title: "Pricing", description: "Simple pricing for Streak X Pro." };
 
@@ -20,7 +21,7 @@ export default function PricingPage() {
       </main>
       <footer className="landing-footer pricing-footer">
         <Link href="/">Streak X</Link>
-        <nav aria-label="Legal navigation"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="mailto:support@streakx.online">Support</a></nav>
+        <nav aria-label="Legal navigation"><TopLink href="/privacy#page-top">Privacy</TopLink><TopLink href="/terms#page-top">Terms</TopLink><a href="mailto:support@streakx.online">Support</a></nav>
         <span>A little progress. Every day.</span>
       </footer>
     </>

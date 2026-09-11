@@ -4,6 +4,7 @@ import { GoalProgress, StreakCard } from "@/components/ProgressCards";
 import ActivityHeatmap from "@/components/ActivityHeatmap";
 import { DEMO_TODAY, demoActivity } from "@/lib/activity/demo";
 import PricingCards from "@/components/PricingCards";
+import TopLink from "@/components/TopLink";
 
 // Marketing content is independent of sessions and can be built ahead of time.
 export const dynamic = "error";
@@ -199,8 +200,8 @@ export default function Home() {
           <a href="#how-it-works">How it works</a>
           <a href="#faq">FAQs</a>
           <Link href="/pricing">Pricing</Link>
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
+          <TopLink href="/privacy#page-top">Privacy</TopLink>
+          <TopLink href="/terms#page-top">Terms</TopLink>
           <Link href="/dashboard">Open app <Icon name="arrow" /></Link>
         </nav>
         <span>Built for the ones who keep showing up.</span>

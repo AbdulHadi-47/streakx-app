@@ -1,6 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import { Brand, PublicHeader } from "@/components/ui";
+import TopLink from "@/components/TopLink";
 
 export type LegalSection = {
   id: string;
@@ -63,8 +63,8 @@ export default function LegalPage({
       <footer className="landing-footer expanded-footer legal-footer">
         <div><Brand /><p>A little progress. Every day.</p></div>
         <nav aria-label="Legal navigation">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/terms">Terms</Link>
+          <TopLink href="/privacy#page-top">Privacy</TopLink>
+          <TopLink href="/terms#page-top">Terms</TopLink>
           <a href="mailto:support@streakx.online">Support</a>
         </nav>
         <span>© 2026 Streak X. All rights reserved.</span>

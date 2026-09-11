@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BILLING_PLANS, PLAN_FEATURES, type BillingInterval } from "@/lib/billing/plans";
 import { Icon } from "@/components/ui";
+import TopLink from "@/components/TopLink";
 
 export default function PricingCards({ checkout = false, configured = true }: { checkout?: boolean; configured?: boolean }) {
   return (
@@ -42,7 +43,7 @@ export default function PricingCards({ checkout = false, configured = true }: { 
         </div>
       </section>
       <p className="pricing-legal">
-        When you purchase a subscription, you agree to the <Link href="/terms">Terms of Service</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.
+        When you purchase a subscription, you agree to the <TopLink href="/terms#page-top">Terms of Service</TopLink> and acknowledge the <TopLink href="/privacy#page-top">Privacy Policy</TopLink>.
       </p>
     </div>
   );

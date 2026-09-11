@@ -199,6 +199,8 @@ export default function Home() {
           <a href="#how-it-works">How it works</a>
           <a href="#faq">FAQs</a>
           <Link href="/pricing">Pricing</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/terms">Terms</Link>
           <Link href="/dashboard">Open app <Icon name="arrow" /></Link>
         </nav>
         <span>Built for the ones who keep showing up.</span>

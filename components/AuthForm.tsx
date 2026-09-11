@@ -53,6 +53,11 @@ export default function AuthForm({ mode, notice = "" }: { mode: "login" | "signu
         {signup ? "Already have an account?" : "New to Streak X?"}{" "}
         <Link href={signup ? "/login" : "/signup"}>{signup ? "Log in" : "Create an account"}</Link>
       </p>
+      {signup && (
+        <p className="auth-legal">
+          By creating an account, you agree to the <Link href="/terms">Terms of Service</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.
+        </p>
+      )}
     </>
   );
 }

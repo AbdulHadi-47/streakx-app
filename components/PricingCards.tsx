@@ -41,6 +41,9 @@ export default function PricingCards({ checkout = false, configured = true }: { 
           ))}
         </div>
       </section>
+      <p className="pricing-legal">
+        When you purchase a subscription, you agree to the <Link href="/terms">Terms of Service</Link> and acknowledge the <Link href="/privacy">Privacy Policy</Link>.
+      </p>
     </div>
   );
 }

@@ -18,7 +18,11 @@ export default function PricingPage() {
         <PricingCards />
         <p className="pricing-footnote">Prices are in USD. Taxes may apply. Payments are securely handled by Creem.</p>
       </main>
-      <footer className="landing-footer"><Link href="/">Streak X</Link><span>A little progress. Every day.</span></footer>
+      <footer className="landing-footer pricing-footer">
+        <Link href="/">Streak X</Link>
+        <nav aria-label="Legal navigation"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="mailto:support@streakx.online">Support</a></nav>
+        <span>A little progress. Every day.</span>
+      </footer>
     </>
   );
 }

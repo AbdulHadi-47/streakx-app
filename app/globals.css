@@ -82,8 +82,8 @@ h1, h2, h3, p { margin: 0; }
 .text-link:hover { color: white; }
 .text-link .icon { width: 15px; height: 15px; }
 .brand { display: inline-flex; align-items: center; font-size: 27px; letter-spacing: -1.4px; font-weight: 650; line-height: 1; }
-.brand-x { margin-left: 3px; font-weight: 400; }
-.brand-dot { width: 4px; height: 4px; background: var(--blue); border-radius: 50%; margin: 16px 0 0 3px; }
+.brand-x { margin-left: 3px; color: var(--blue); font-weight: 400; }
+.brand-mark .brand-dot { width: 4px; height: 4px; background: var(--blue); border-radius: 50%; margin: 16px 0 0 3px; }
 .brand-mark { display: flex; align-items: flex-end; gap: 3px; height: 25px; margin-right: 11px; transform: skew(-12deg); }
 .brand-mark span { width: 4px; border-radius: 1px; background: #e9e9ec; }
 .brand-mark span:nth-child(1) { height: 12px; }

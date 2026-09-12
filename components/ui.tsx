@@ -23,7 +23,7 @@ export function Icon({ name, className = "" }: { name: IconName; className?: str
   return <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 export function Brand() {
-  return <TopLink href="/#page-top" className="brand" ariaLabel="Streak X home"><span className="brand-mark" aria-hidden="true"><span /><span /><span /></span>Streak<span className="brand-x">X  </span><span className="brand-dot" /></TopLink>;
+  return <TopLink href="/#page-top" className="brand" ariaLabel="Streak X home"><span className="brand-mark" aria-hidden="true"><span /><span /><span /><span className="brand-dot" /></span>Streak<span className="brand-x">X</span></TopLink>;
 }
 export function PublicHeader() {
   return (

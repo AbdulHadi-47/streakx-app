@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import AppHeader from "@/components/AppHeader";
+import TopLink from "@/components/TopLink";
 import { EmailForm, PasswordForm, PreferencesForm } from "@/components/SettingsForms";
 import { Icon } from "@/components/ui";
 import { signOut } from "@/app/actions/auth";
@@ -10,6 +11,8 @@ import { normalizeTimeZone, TIME_ZONE_COOKIE } from "@/lib/timezone";
 import { getSubscription, subscriptionHasAccess } from "@/lib/billing/subscription";
 
 export const metadata: Metadata = { title: "Settings" };
+
+const reportProblemHref = `mailto:support@streakx.online?subject=${encodeURIComponent("Streak X — Report a problem")}&body=${encodeURIComponent("What happened?\n\nWhat did you expect to happen?\n\nSteps to reproduce:\n1. \n\nPage where it happened:\n\nPlease do not include passwords, payment-card details, or authentication links.")}`;
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -60,6 +63,19 @@ export default async function SettingsPage() {
             <EmailForm email={user.email ?? ""} />
             <PasswordForm />
             <div className="settings-signout"><div><strong>Sign out</strong><p>End your current Streak X session.</p></div><form action={signOut}><button className="button button-secondary button-small" type="submit"><Icon name="logout" /> Log out</button></form></div>
+          </div>
+        </section>
+        <section className="settings-section" id="support" aria-labelledby="support-heading">
+          <div className="settings-section-copy"><span className="settings-icon"><Icon name="reply" /></span><div><h2 id="support-heading">Help and support</h2><p>A question, a bug, or an idea? Get in touch.</p></div></div>
+          <div className="settings-support-content">
+            <a className="settings-support-email" href="mailto:support@streakx.online">support@streakx.online</a>
+            <p>We aim to reply within 2 business days.</p>
+            <a className="button button-secondary button-small" href={reportProblemHref}>Report a problem <Icon name="arrow" /></a>
+            <p className="settings-support-hint">Opens your email app with a short template. You can also email us directly.</p>
+            <nav className="settings-support-links" aria-label="Policies">
+              <TopLink href="/privacy#page-top">Privacy Policy <Icon name="arrow" /></TopLink>
+              <TopLink href="/terms#page-top">Terms of Service <Icon name="arrow" /></TopLink>
+            </nav>
           </div>
         </section>
       </main>

@@ -7,7 +7,7 @@ export type IconName = "arrow" | "flame" | "post" | "reply" | "check" | "refresh
 export function Icon({ name, className = "" }: { name: IconName; className?: string }) {
   const paths: Record<IconName, ReactNode> = {
     arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
-    flame: <path d="M13 3c1 5-4 6-3 10 2 0 3-2 3-4 4 3 5 5 5 7a6 6 0 0 1-12 0c0-4 3-6 3-6-1 4 1 4 1 4-1-5 4-6 3-11Z" />,
+    flame: <><path d="M15.36 5.21A8.25 8.25 0 0 1 12 21 8.25 8.25 0 0 1 6.04 7.05 8.29 8.29 0 0 0 9 9.6a8.98 8.98 0 0 1 3.36-6.87 8.21 8.21 0 0 0 3 2.48Z" /><path d="M12 18a3.75 3.75 0 0 0 .5-7.47 5.99 5.99 0 0 0-1.93 3.55 5.97 5.97 0 0 1-2.13-1A3.75 3.75 0 0 0 12 18Z" /></>,
     post: <path d="m15 5 4 4M5 19l4-1L20 7a2.8 2.8 0 0 0-4-4L5 14l-1 6ZM13 20h7" />,
     reply: <path d="M20 11a8 8 0 0 1-8 8H5l-3 3V11a9 9 0 0 1 18 0ZM7 10h8M7 14h5" />,
     check: <path d="m5 12 4 4L19 6" />,

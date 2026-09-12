@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body id="page-top"><a className="skip-link" href="#main">Skip to content</a>{children}</body>
+      <body id="page-top"><a className="skip-link" href="#main">Skip to content</a>{children}<Analytics /></body>
     </html>
   );
 }

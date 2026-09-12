@@ -3,6 +3,7 @@ import { Checkout } from "@creem_io/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { getCreemProductId, isBillingInterval } from "@/lib/billing/plans";
 import { creemTestMode } from "@/lib/billing/creem";
+import { getSubscriptionLookup, subscriptionHasAccess } from "@/lib/billing/subscription";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +20,12 @@ export async function GET(request: NextRequest) {
   if (!user?.email) {
     const loginUrl = new URL("/login", request.url);
     return NextResponse.redirect(loginUrl);
+  }
+
+  const { subscription } = await getSubscriptionLookup(supabase, user.id);
+  if (subscriptionHasAccess(subscription)) {
+    const destination = subscription?.creem_customer_id ? "/billing/portal" : "/dashboard";
+    return NextResponse.redirect(new URL(destination, request.url));
   }
 
   const plan = request.nextUrl.searchParams.get("plan");

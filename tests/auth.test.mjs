@@ -82,6 +82,33 @@ test("missing sessions and service failures cannot look like successful logins",
   }
 });
 
+test("Google sign-in starts a server-side OAuth flow with the right callback", async () => {
+  for (const mode of ["login", "signup"]) {
+    let request;
+    const actions = authActions({ signInWithOAuth: async (options) => {
+      request = options;
+      return { data: { url: "https://accounts.google.com/oauth" }, error: null };
+    } });
+    const form = new FormData();
+    form.set("mode", mode);
+    await assert.rejects(actions.signInWithGoogle(form), /REDIRECT:https:\/\/accounts.google.com\/oauth/);
+    assert.equal(request.provider, "google");
+    assert.equal(request.options.redirectTo, `http://localhost:3000/auth/callback?next=${mode === "signup" ? "/subscribe" : "/dashboard"}&provider=google`);
+  }
+});
+
+test("Google provider failures return to the right auth page", async () => {
+  for (const mode of ["login", "signup"]) {
+    const actions = authActions({ signInWithOAuth: async () => ({ data: { url: null }, error: { message: "provider disabled" } }) });
+    const form = new FormData();
+    form.set("mode", mode);
+    await assert.rejects(actions.signInWithGoogle(form), (error) => {
+      assert.equal(error.message, `REDIRECT:/${mode}?status=google-error`);
+      return true;
+    });
+  }
+});
+
 test("signup requiring email confirmation stays on the form with instructions", async () => {
   let request;
   const actions = authActions({ signUp: async (payload) => {
@@ -177,4 +204,27 @@ test("real Supabase SSR cookies survive a new server request", async () => {
   assert.equal(result.error, null);
   assert.equal(result.data.user.id, user.id);
   assert.equal(requests.length, 2);
+});
+
+test("Google OAuth stores its PKCE verifier in server-readable cookies", async () => {
+  const jar = new Map();
+  const server = moduleFrom("lib/supabase/server.ts", {
+    "@supabase/ssr": { createServerClient },
+    "next/headers": { cookies: async () => ({
+      getAll: () => Array.from(jar, ([name, value]) => ({ name, value })),
+      set: (name, value) => jar.set(name, value),
+    }) },
+  }, {
+    process: { env: { NEXT_PUBLIC_SUPABASE_URL: "https://fixture.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "fixture-key" } },
+    AbortSignal,
+    fetch: async () => { throw new Error("OAuth initiation should not require a network request"); },
+  });
+  const client = await server.createClient({ writableCookies: true });
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: "https://streakx.online/auth/callback?next=/dashboard&provider=google" },
+  });
+  assert.equal(error, null);
+  assert.match(data.url, /provider=google/);
+  assert.ok([...jar.keys()].some((name) => name.includes("code-verifier")));
 });

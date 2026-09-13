@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = params.get("token_hash");
   const type = params.get("type") as EmailOtpType | null;
   const providerError = params.get("error") ?? params.get("error_code");
+  const googleFlow = params.get("provider") === "google";
   const supabase = await createClient({ writableCookies: true });
   let error: unknown = providerError ? new Error(providerError) : null;
 
@@ -27,6 +28,12 @@ export async function GET(request: NextRequest) {
   destination.search = "";
   if (!error) {
     destination.pathname = type === "recovery" ? "/reset-password" : next;
+    return NextResponse.redirect(destination);
+  }
+
+  if (googleFlow) {
+    destination.pathname = next === "/subscribe" ? "/signup" : "/login";
+    destination.searchParams.set("status", "google-error");
     return NextResponse.redirect(destination);
   }
 

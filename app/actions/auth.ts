@@ -76,6 +76,26 @@ export async function signUp(_previous: AuthState, formData: FormData): Promise<
   redirect("/dashboard");
 }
 
+export async function signInWithGoogle(formData: FormData) {
+  const signup = formData.get("mode") === "signup";
+  const next = signup ? "/subscribe" : "/dashboard";
+  let providerUrl: string | undefined;
+
+  try {
+    const supabase = await createClient({ writableCookies: true });
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${await getSiteUrl()}/auth/callback?next=${next}&provider=google` },
+    });
+    if (!error) providerUrl = data.url;
+  } catch {
+    // The login page explains failures without exposing provider details.
+  }
+
+  if (!providerUrl) redirect(`${signup ? "/signup" : "/login"}?status=google-error`);
+  redirect(providerUrl);
+}
+
 export async function requestPasswordReset(_previous: RecoveryState, formData: FormData): Promise<RecoveryState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   if (!email) return { success: false, message: "Enter your email address.", email };

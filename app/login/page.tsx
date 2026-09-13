@@ -7,5 +7,5 @@ export default async function LoginPage({
 }) {
   const { status } = await searchParams;
   const notice = status === "password-updated" ? "Password updated. Log in with your new password." : "";
-  return <AuthShell><AuthForm mode="login" notice={notice} /></AuthShell>;
+  return <AuthShell><AuthForm mode="login" notice={notice} googleError={status === "google-error"} /></AuthShell>;
 }
